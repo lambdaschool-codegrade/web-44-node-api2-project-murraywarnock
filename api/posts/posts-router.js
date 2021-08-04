@@ -9,9 +9,7 @@ router.get("/", async (req, res) => {
     const posts = await Post.find()
     res.status(200).json(posts)
     } catch (error) {
-        res.status(500).json({
-            message: error.message
-        })
+        res.status(500).json({ message: "The posts information could not be retrieved" })
     }
 });
 
@@ -25,40 +23,32 @@ router.get("/:id", async (req, res) => {
             res.status(404).json({message: "The post with the specified ID does not exist"})
         }
     } catch (error) {
-        res.status(500).json({
-            message: error.message
-        })
+        res.status(500).json({ message: "The post information could not be retrieved" })
     }
 });
 
 // Creates a post using the information sent inside the request body and returns the newly created post object
 router.post('/', (req, res) => {
-    if (!req.body.title || !req.body.contents) {
-        return res.status(400).json({ message: "Please provide title and contents for the post" })
-    }
-    Post.insert(req.body)
-      .then(resp => {
-        res.status(201).json(resp);
-///****************************/// Embedded find by id
-        Post.findById(resp.id)
-            .then(post => {
-                if (post) {
-                    return res.status(200).json(post)
-                } else {
-                    res.status(404).json({message: "The post with the specified ID does not exist"})
-                }
-            })
-            .catch(error => {
-                res.status(500).json({
-                    message: error.message
-                });
-            });
-///****************************///
-      })
+    const { title, contents } = req.body;
+    if (!title || !contents) {
+        res.status(400).json({ message: "Please provide title and contents for the post" })
+    } else {
+    Post.insert({ title, contents })
+        .then(({ id }) => {
+            return Post.findById(id)
+        })
+        .then(post => {
+            if (post) {
+                return res.status(201).json(post)
+            } else {
+                res.status(404).json({message: "The post with the specified ID does not exist"})
+            }
+        })
       .catch(error => {
         console.log(error);
         res.status(500).json({ message: "There was an error while saving the post to the database" });
       });
+    }
 });
 // Updates the post with the specified id using data from the request body and returns the modified document, not the original
 router.put('/:id', (req, res) => {
@@ -143,5 +133,20 @@ router.delete('/:id', (req, res) => {
       });
   });
 
+// Returns an array of all the comment objects associated with the post with the specified id
+  router.get("/:id", async (req, res) => {
+    try {
+        const post = await Post.findCommentById(req.params.id)
+        if (post) {
+            res.status(200).json(post)
+        } else {
+            res.status(404).json({message: "The post with the specified ID does not exist"})
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
+    }
+});
 
 module.exports = router;
