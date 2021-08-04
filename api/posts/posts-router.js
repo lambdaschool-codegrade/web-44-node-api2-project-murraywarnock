@@ -84,57 +84,27 @@ router.put('/:id', (req, res) => {
       });
   });
 // Removes the post with the specified id and returns the deleted post object
-router.delete('/:id', (req, res) => {
-// First get the post to be deleted
-    Post.findById(req.params.id)
-    .then(post => {
-        if (post) {
-            //  res.status(200).json(post)
-            // Then remove the post
-             Post.remove(req.params.id)
-             .then(count => {
-               if (count > 0) {
-                 res.status(200).json(post);
-               } else {
-                 res.status(404).json({ message: 'The post could not be found' });
-               }
-             })
-             .catch(error => {
-               console.log(error);
-               res.status(500).json({
-                 message: 'Error removing the post',
-               });
-             });
-
-
-
-        } else {
-            res.status(404).json({message: "The post with the specified ID does not exist"})
-        }
-    })
-.catch(error => {
-    res.status(500).json({
-        message: error.message
-    });
-});
-    Post.remove(req.params.id)
-      .then(count => {
-        if (count > 0) {
-          res.status(200).json({ message: 'The post has been deleted' });
-        } else {
-          res.status(404).json({ message: 'The post could not be found' });
-        }
-      })
-      .catch(error => {
-        console.log(error);
+router.delete('/:id', async (req, res) => {
+    try {
+         const post = await Post.findById(req.params.id)
+         if (!post) {
+            res.status(404).json({
+                message: "The post with the specified ID does not exist"
+            }) 
+         } else {
+             await Post.remove(req.params.id)
+             res.json(post)
+         }
+    } catch (error) {
         res.status(500).json({
-          message: 'Error removing the post',
-        });
-      });
-  });
-
+            message: "The post could not be removed",
+            error: error.message,
+            stack: error.stack,
+        })
+    }
+});
 // Returns an array of all the comment objects associated with the post with the specified id
-  router.get("/:id", async (req, res) => {
+  router.get("/:id/comments", async (req, res) => {
     try {
         const post = await Post.findCommentById(req.params.id)
         if (post) {
