@@ -70,7 +70,9 @@ router.put('/:id', (req, res) => {
             })
             .catch(error => {
                 res.status(500).json({
-                    message: error.message
+                    message: "The posts information could not be retrieved",
+                    error: error.message,
+                    stack: error.stack,
                 });
             });
 ///****************************///        
@@ -114,7 +116,9 @@ router.delete('/:id', async (req, res) => {
         }
     } catch (error) {
         res.status(500).json({
-            message: error.message
+            message: "The comments information could not be retrieved",
+            error: error.message,
+            stack: error.stack,
         })
     }
 });
